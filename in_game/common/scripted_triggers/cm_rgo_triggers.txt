@@ -4,6 +4,7 @@ cm_rgo_basic_expand_eligibility = {
 	AND = {
 		cm_is_rgo_advance_researched = yes
 		cm_is_rgo_not_max_level_already = yes
+		cm_location_rgo_promotion_buffer_slack >= 0
 	}
 }
 
@@ -20,6 +21,7 @@ cm_is_able_to_auto_expand_rgo = {
 		cm_check_country_gold_above = { threshold = cm_expected_gold_available_for_rgo_auto_expand }
 		cm_rgo_metric_gate_passes = yes
 		cm_rgo_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_rgos }
+		cm_market_has_construction_goods_for_rgo = yes
 	}
 }
 

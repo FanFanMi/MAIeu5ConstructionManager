@@ -112,7 +112,6 @@ cm_auto_build_will_auto_build = {
 	cm_location_allowed_to_build = { target = $target$ }
 	cm_auto_build_check_meets_minimum_control = { target = $target$ }
 	cm_auto_build_check_meets_minimum_market_price_impact = { target = $target$ }
-	cm_location_has_enough_pops_available = yes
 	cm_auto_build_check_rgo_level_requirement_met = { target = $target$ }
 	cm_check_location_meets_min_market_access = yes
 }

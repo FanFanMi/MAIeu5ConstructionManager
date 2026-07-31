@@ -14,7 +14,7 @@ cm_cmm_post_registration = {
 	# Auto-expand buildings and RGOs start enabled; auto-build capital builds regardless of construction material prices.
 	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = enabled item = 1 value = 1 }
 	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = enabled item = 2 value = 1 }
-	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = min_discount item = 7 value = 33 }
+	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = min_discount item = 7 value = 100000 }
 
 	# Gold and Silver are excluded from rural-to-town urbanization by default.
 	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = auto_urbanize_ignore_list field_id = ignored item = 1 value = 1 }
@@ -53,7 +53,7 @@ cm_rebuild_priority_lookups = {
 	# Gate threshold by feature, numeric field slot 1, direct values.
 	cmm_build_list_field_map = { setting = cm__priority_list field_slot = 1 map_name = cm_priority_min_profit multiply = 1 }
 
-	# Min discount by feature, numeric field slot 2, CMM -33..33 -> -0.33..0.33.
+	# Min discount by feature, numeric field slot 2, CMM -33..100000 -> -0.33..1000.
 	cmm_build_list_field_map = { setting = cm__priority_list field_slot = 2 map_name = cm_priority_min_discount multiply = 0.01 }
 
 	# Enabled features, bool field slot 3.
@@ -346,7 +346,7 @@ cm_rebuild_auto_build_lookups = {
 	# Min control by building type, numeric field slot 3, CMM 0-100 -> 0-1.
 	cmm_build_list_field_map = { setting = cm__auto_build_list field_slot = 3 map_name = cm_min_control_by_building_type multiply = 0.01 }
 
-	# Min discount by building type, numeric field slot 4, CMM -33..33 -> -0.33..0.33.
+	# Min discount by building type, numeric field slot 4, CMM -33..100000 -> -0.33..1000.
 	cmm_build_list_field_map = { setting = cm__auto_build_list field_slot = 4 map_name = cm_min_discount_by_building_type multiply = 0.01 }
 
 	# Min RGOs by building type, numeric field slot 5, direct values.

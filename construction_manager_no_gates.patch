@@ -1,0 +1,342 @@
+diff --git a/in_game/common/on_action/cm_on_action.txt b/in_game/common/on_action/cm_on_action.txt
+index 31da4ec..533b2fc 100644
+--- a/in_game/common/on_action/cm_on_action.txt
++++ b/in_game/common/on_action/cm_on_action.txt
+@@ -3,6 +3,24 @@
+ 		cm_unified_auto_expand
+ 		cm_update_all_list_visibility
+ 		cm_monthly_auto_town_rights
++		cm_monthly_grant_construction_capacity
++	}
++}
++
++# Grants every owned location a very large simultaneous-construction bonus each
++# month, so the automation is never bottlenecked by a location's normal 1-2
++# concurrent-construction cap. add_and_extend avoids re-stacking the modifier
++# on locations that already have it; new locations (conquest, purchase, etc.)
++# pick it up on the next monthly pulse.
++cm_monthly_grant_construction_capacity = {
++	effect = {
++		every_owned_location = {
++			add_location_modifier = {
++				modifier = cm_unlimited_construction_slots_modifier
++				mode = add_and_extend
++				years = -1
++			}
++		}
+ 	}
+ }
+ 
+diff --git a/in_game/common/scripted_effects/cm_cmm_custom_effects.txt b/in_game/common/scripted_effects/cm_cmm_custom_effects.txt
+index d27ba89..b6cae42 100644
+--- a/in_game/common/scripted_effects/cm_cmm_custom_effects.txt
++++ b/in_game/common/scripted_effects/cm_cmm_custom_effects.txt
+@@ -14,7 +14,7 @@ cm_cmm_post_registration = {
+ 	# Auto-expand buildings and RGOs start enabled; auto-build capital builds regardless of construction material prices.
+ 	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = enabled item = 1 value = 1 }
+ 	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = enabled item = 2 value = 1 }
+-	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = min_discount item = 7 value = 33 }
++	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = priority_list field_id = min_discount item = 7 value = 100000 }
+ 
+ 	# Gold and Silver are excluded from rural-to-town urbanization by default.
+ 	cmm_set_list_field_default_for_item = { mod_id = cm setting_id = auto_urbanize_ignore_list field_id = ignored item = 1 value = 1 }
+@@ -53,7 +53,7 @@ cm_rebuild_priority_lookups = {
+ 	# Gate threshold by feature, numeric field slot 1, direct values.
+ 	cmm_build_list_field_map = { setting = cm__priority_list field_slot = 1 map_name = cm_priority_min_profit multiply = 1 }
+ 
+-	# Min discount by feature, numeric field slot 2, CMM -33..33 -> -0.33..0.33.
++	# Min discount by feature, numeric field slot 2, CMM -33..100000 -> -0.33..1000.
+ 	cmm_build_list_field_map = { setting = cm__priority_list field_slot = 2 map_name = cm_priority_min_discount multiply = 0.01 }
+ 
+ 	# Enabled features, bool field slot 3.
+@@ -346,7 +346,7 @@ cm_rebuild_auto_build_lookups = {
+ 	# Min control by building type, numeric field slot 3, CMM 0-100 -> 0-1.
+ 	cmm_build_list_field_map = { setting = cm__auto_build_list field_slot = 3 map_name = cm_min_control_by_building_type multiply = 0.01 }
+ 
+-	# Min discount by building type, numeric field slot 4, CMM -33..33 -> -0.33..0.33.
++	# Min discount by building type, numeric field slot 4, CMM -33..100000 -> -0.33..1000.
+ 	cmm_build_list_field_map = { setting = cm__auto_build_list field_slot = 4 map_name = cm_min_discount_by_building_type multiply = 0.01 }
+ 
+ 	# Min RGOs by building type, numeric field slot 5, direct values.
+diff --git a/in_game/common/scripted_effects/cm_cmm_effects.txt b/in_game/common/scripted_effects/cm_cmm_effects.txt
+index fd5a1f1..682cfde 100644
+--- a/in_game/common/scripted_effects/cm_cmm_effects.txt
++++ b/in_game/common/scripted_effects/cm_cmm_effects.txt
+@@ -39,9 +39,9 @@ cm_register_cmf_mod = {
+ 		mod_id = cm
+ 		setting_id = priority_list
+ 		field_id = min_discount
+-		default_value = 0
++		default_value = 100000
+ 		min_value = -33
+-		max_value = 33
++		max_value = 100000
+ 		step_value = 1
+ 	}
+ 	cmm_set_list_field_conditional_format = { mod_id = cm setting_id = priority_list field_id = min_discount }
+@@ -91,7 +91,7 @@ cm_register_cmf_mod = {
+ 		group_id = priority_list
+ 		default_value = 0
+ 		min_value = 0
+-		max_value = 200
++		max_value = 2000
+ 		step_value = 1
+ 	}
+ 	cmm_sync_setting_alias = {
+@@ -297,9 +297,9 @@ cm_register_cmf_mod = {
+ 		mod_id = cm
+ 		setting_id = auto_build_list
+ 		field_id = min_discount
+-		default_value = 0
++		default_value = 100000
+ 		min_value = -33
+-		max_value = 33
++		max_value = 100000
+ 		step_value = 1
+ 	}
+ 	cmm_set_list_field_conditional_format = { mod_id = cm setting_id = auto_build_list field_id = min_discount }
+diff --git a/in_game/common/scripted_effects/cm_feature_effects.txt b/in_game/common/scripted_effects/cm_feature_effects.txt
+index 1833639..1510161 100644
+--- a/in_game/common/scripted_effects/cm_feature_effects.txt
++++ b/in_game/common/scripted_effects/cm_feature_effects.txt
+@@ -120,7 +120,6 @@ cm_stage_upgrade_candidate = {
+ 				cm_is_not_under_construction = yes
+ 			}
+ 			scope:cm_location = { cm_location_building_type_not_under_construction = yes }
+-			cm_auto_expand_check_minimum_gold_reserve = yes
+ 			NOT = { scope:cm_location = { is_target_in_variable_list = { name = cm_upgrade_in_progress target = scope:cm_ae_staged_type } } }
+ 		}
+ 		scope:cm_location = {
+@@ -340,7 +339,7 @@ cm_run_auto_expand_buildings = {
+ 			save_scope_as = cm_location
+ 			ordered_buildings_in_location = {
+ 				order_by = building_index
+-				max = 100
++				max = 500
+ 				check_range_bounds = no
+ 				save_scope_as = cm_building
+ 				building_type = { save_scope_as = cm_building_type }
+@@ -383,7 +382,7 @@ cm_run_auto_expand_buildings = {
+ 		# Upgrades for standing obsolete buildings whose replacement is registered
+ 		ordered_buildings_in_location = {
+ 			order_by = building_index
+-			max = 100
++			max = 500
+ 			check_range_bounds = no
+ 			save_scope_as = cm_building
+ 			building_type = { save_scope_as = cm_building_type }
+@@ -507,7 +506,7 @@ cm_run_upgrade_all_buildings = {
+ 		save_scope_as = cm_location
+ 		ordered_buildings_in_location = {
+ 			order_by = building_index
+-			max = 100
++			max = 500
+ 			check_range_bounds = no
+ 			save_scope_as = cm_building
+ 			building_type = { save_scope_as = cm_building_type }
+@@ -517,8 +516,6 @@ cm_run_upgrade_all_buildings = {
+ 					cm_is_building_obsolete = yes
+ 					location = { cm_is_building_type_upgradeable_and_can_be_upgraded_by_owner = yes }
+ 					cm_is_not_under_construction = yes
+-					cm_auto_expand_check_minimum_gold_reserve = yes
+-					cm_upgrade_all_meets_minimum_discount = yes
+ 					NOT = { scope:cm_location = { is_target_in_variable_list = { name = cm_upgrade_in_progress target = scope:cm_building_type } } }
+ 				}
+ 				scope:cm_building_type = { cm_find_current_building_type = yes }
+diff --git a/in_game/common/scripted_guis/cm_scripted_gui.txt b/in_game/common/scripted_guis/cm_scripted_gui.txt
+index 295557a..ec37ffa 100644
+--- a/in_game/common/scripted_guis/cm_scripted_gui.txt
++++ b/in_game/common/scripted_guis/cm_scripted_gui.txt
+@@ -65,15 +65,7 @@ cm_gui_construct_upgrade = {
+ 				limit = {
+ 					exists = scope:cm_new_building_type
+ 					scope:cm_can_build = yes
+-					cm_country_can_afford_staged_cost = yes
+ 					scope:cm_new_building_type = { save_temporary_scope_as = cm_building_type }
+-					cm_market_has_construction_goods_for_building = yes
+-					# Auto-expand's obsolete upgrades are gated on the replacement's engine values;
+-					# upgrade-all entries are not marked gated and skip the metric check.
+-					OR = {
+-						NOT = { is_target_in_variable_list = { name = cm_q_upgrade_gated_types target = scope:cm_old_building_type } }
+-						cm_gui_metric_gate_passes = yes
+-					}
+ 				}
+ 				if = {
+ 					limit = { NOT = { is_target_in_variable_list = { name = cm_q_approved_upgrade_types target = scope:cm_old_building_type } } }
+@@ -146,10 +138,7 @@ cm_gui_try_build = {
+ 			scope:cm_country = { change_variable = { name = cm_q_processed add = 1 } }
+ 			if = {
+ 				limit = {
+-					cm_gui_metric_gate_passes = yes
+ 					scope:cm_can_build = yes
+-					cm_country_can_afford_staged_cost = yes
+-					cm_market_has_construction_goods_for_building = yes
+ 					# A staged upgrade already constructs this type here
+ 					NOT = { is_target_in_variable_list = { name = cm_q_upgrade_target_types target = scope:cm_building_type } }
+ 					# The engine converts a build into the standing obsolete predecessor's upgrade.
+@@ -195,8 +184,6 @@ cm_gui_try_rgo = {
+ 			if = {
+ 				limit = {
+ 					cm_should_rgo_auto_expand = yes
+-					cm_rgo_metric_gate_passes = yes
+-					cm_market_has_construction_goods_for_rgo = yes
+ 				}
+ 				construct_rgo_upgrade = { }
+ 			}
+@@ -223,8 +210,6 @@ cm_gui_try_ungated = {
+ 			if = {
+ 				limit = {
+ 					cm_get_open_build_queue_slots > 0
+-					cm_country_can_afford_staged_cost = yes
+-					cm_market_has_construction_goods_for_building = yes
+ 					# The engine buildability bool is unverified for subject locations.
+ 					OR = {
+ 						NOT = { owner = scope:cm_country }
+@@ -342,7 +327,6 @@ cm_gui_try_food_rgo = {
+ 				limit = {
+ 					cm_get_open_build_queue_slots > 0
+ 					cm_check_country_gold_above = { threshold = cm_food_gold_threshold_plus_planned_spend }
+-					cm_market_has_construction_goods_for_rgo = yes
+ 				}
+ 				construct_rgo_upgrade = { }
+ 			}
+@@ -438,8 +422,6 @@ cm_location_will_auto_expand_from_zero_levels = {
+ 		save_temporary_scope_as = cm_location
+ 		scope:cm_country = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_expand_buildings } }
+ 		cm_location_will_auto_expand_from_zero_levels = yes
+-		cm_gui_metric_gate_passes = yes
+-		cm_country_can_afford_predicted_cost = yes
+ 		scope:cm_can_build = yes
+ 	}
+ }
+@@ -455,15 +437,9 @@ cm_is_building_able_to_auto_expand = {
+ 		owner = { cm_should_pause_auto_expand = no }
+ 		owner = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_expand_buildings } }
+ 		location = { NOT = { integration_level = conquered } }
+-		cm_gui_metric_gate_passes = yes
+ 		is_opened = yes
+-		cm_is_building_fully_employed = yes
+-		is_lacking_goods = no
+ 		cm_is_not_under_construction = yes
+-		location = { cm_location_has_enough_pops_available = yes }
+ 		location = { cm_is_location_under_building_limit = yes }
+-		cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+-		cm_country_can_afford_predicted_cost = yes
+ 		cm_is_building_not_max_level_and_not_obsolete_or_is_building_type_upgradeable_and_can_be_upgraded_by_owner = yes
+ 		location.owner = { can_build_building = scope:cm_building_type }
+ 		# can_build_building - doesn't work from Building-rooted scripted GUI so moved to GUI visibility
+@@ -474,7 +450,6 @@ cm_is_building_able_to_auto_expand = {
+ 		trigger_else = {
+ 			scope:cm_can_build = yes
+ 		}
+-		location = { cm_market_has_construction_goods_for_building = yes }
+ 	}
+ }
+ 
+diff --git a/in_game/common/scripted_triggers/cm_auto_build_triggers.txt b/in_game/common/scripted_triggers/cm_auto_build_triggers.txt
+index 4c2a5e2..efbfe14 100644
+--- a/in_game/common/scripted_triggers/cm_auto_build_triggers.txt
++++ b/in_game/common/scripted_triggers/cm_auto_build_triggers.txt
+@@ -110,11 +110,7 @@ cm_auto_build_will_auto_build = {
+ 	# are handled by the auto-expand-buildings feature.
+ 	NOT = { has_building = $target$ }
+ 	cm_location_allowed_to_build = { target = $target$ }
+-	cm_auto_build_check_meets_minimum_control = { target = $target$ }
+-	cm_auto_build_check_meets_minimum_market_price_impact = { target = $target$ }
+-	cm_location_has_enough_pops_available = yes
+ 	cm_auto_build_check_rgo_level_requirement_met = { target = $target$ }
+-	cm_check_location_meets_min_market_access = yes
+ }
+ 
+ # Root is the location. Expects the building type as a target, also expects the scope country.
+diff --git a/in_game/common/scripted_triggers/cm_building_triggers.txt b/in_game/common/scripted_triggers/cm_building_triggers.txt
+index 0760d10..1dc7978 100644
+--- a/in_game/common/scripted_triggers/cm_building_triggers.txt
++++ b/in_game/common/scripted_triggers/cm_building_triggers.txt
+@@ -179,10 +179,6 @@ cm_building_can_auto_expand_for_upgrade = {
+ 	owner = { save_temporary_scope_as = cm_country }
+ 	AND = {
+ 		is_opened = yes
+-		cm_is_building_fully_employed = yes
+-		is_lacking_goods = no
+-		cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+-		location = { cm_location_has_enough_pops_available = yes }
+ 		location = { cm_is_location_under_building_limit = yes }
+ 	}
+ }
+@@ -205,13 +201,10 @@ cm_location_will_auto_expand_from_zero_levels = {
+ 	AND = {
+ 		scope:cm_country = { cm_should_pause_auto_expand = no }
+ 		NOT = { integration_level = conquered }
+-		cm_location_has_enough_pops_available = yes
+ 		cm_is_location_under_building_limit = yes
+ 		save_temporary_scope_as = cm_location
+-		cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+ 		cm_location_allowed_to_build = { target = scope:cm_building_type }
+ 		cm_location_building_type_not_under_construction = yes
+-		cm_market_has_construction_goods_for_building = yes
+ 	}
+ }
+ 
+diff --git a/in_game/common/scripted_triggers/cm_food_auto_build_triggers.txt b/in_game/common/scripted_triggers/cm_food_auto_build_triggers.txt
+index 0e1eee3..65f61ae 100644
+--- a/in_game/common/scripted_triggers/cm_food_auto_build_triggers.txt
++++ b/in_game/common/scripted_triggers/cm_food_auto_build_triggers.txt
+@@ -62,8 +62,6 @@ cm_food_can_build_rgo = {
+ 	AND = {
+ 		cm_is_rgo_not_max_level_already = yes
+ 		cm_is_rgo_under_construction = no
+-		cm_check_location_has_laborers_available_or_will_be = yes
+-		cm_check_location_has_peasants_available_or_will_be = yes
+ 	}
+ }
+ 
+diff --git a/in_game/common/scripted_triggers/cm_rgo_triggers.txt b/in_game/common/scripted_triggers/cm_rgo_triggers.txt
+index 393dfca..9e5f5d8 100644
+--- a/in_game/common/scripted_triggers/cm_rgo_triggers.txt
++++ b/in_game/common/scripted_triggers/cm_rgo_triggers.txt
+@@ -4,7 +4,6 @@ cm_rgo_basic_expand_eligibility = {
+ 	AND = {
+ 		cm_is_rgo_advance_researched = yes
+ 		cm_is_rgo_not_max_level_already = yes
+-		cm_location_rgo_promotion_buffer_slack >= 0
+ 	}
+ }
+ 
+@@ -18,10 +17,6 @@ cm_is_able_to_auto_expand_rgo = {
+ 		}
+ 		cm_rgo_basic_expand_eligibility = yes
+ 		cm_is_rgo_under_construction = no
+-		cm_check_country_gold_above = { threshold = cm_expected_gold_available_for_rgo_auto_expand }
+-		cm_rgo_metric_gate_passes = yes
+-		cm_rgo_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_rgos }
+-		cm_market_has_construction_goods_for_rgo = yes
+ 	}
+ }
+ 
+@@ -41,8 +36,6 @@ cm_should_rgo_auto_expand = {
+ 			NOT = { cm_location_auto_food_supersedes_rgo = yes }
+ 			cm_rgo_basic_expand_eligibility = yes
+ 			cm_is_rgo_under_construction = no
+-			cm_check_country_gold_above = { threshold = cm_expected_gold_available_for_rgo_auto_expand_plus_planned_spend }
+-			cm_rgo_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_rgos }
+ 		}
+ 	}
+ }
+diff --git a/in_game/common/static_modifiers/cm_construction_capacity_modifiers.txt b/in_game/common/static_modifiers/cm_construction_capacity_modifiers.txt
+new file mode 100644
+index 0000000..f267b43
+--- /dev/null
++++ b/in_game/common/static_modifiers/cm_construction_capacity_modifiers.txt
+@@ -0,0 +1,11 @@
++﻿# Grants a very large bonus to how many buildings can be under construction
++# at once in a single location (vanilla base is normally 1, or 2 for higher-
++# ranked locations). 1000 is effectively unlimited: no location will ever
++# realistically stage that many simultaneous constructions, since gold,
++# workforce, and building-slot capacity remain real throttles elsewhere.
++cm_unlimited_construction_slots_modifier = {
++	game_data = {
++		category = location
++	}
++	max_constructions_at_same_time = 1000
++}

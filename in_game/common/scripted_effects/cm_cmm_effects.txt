@@ -39,9 +39,9 @@ cm_register_cmf_mod = {
 		mod_id = cm
 		setting_id = priority_list
 		field_id = min_discount
-		default_value = 100000
+		default_value = 0
 		min_value = -33
-		max_value = 100000
+		max_value = 33
 		step_value = 1
 	}
 	cmm_set_list_field_conditional_format = { mod_id = cm setting_id = priority_list field_id = min_discount }
@@ -91,7 +91,7 @@ cm_register_cmf_mod = {
 		group_id = priority_list
 		default_value = 0
 		min_value = 0
-		max_value = 2000
+		max_value = 200
 		step_value = 1
 	}
 	cmm_sync_setting_alias = {
@@ -297,9 +297,9 @@ cm_register_cmf_mod = {
 		mod_id = cm
 		setting_id = auto_build_list
 		field_id = min_discount
-		default_value = 100000
+		default_value = 0
 		min_value = -33
-		max_value = 100000
+		max_value = 33
 		step_value = 1
 	}
 	cmm_set_list_field_conditional_format = { mod_id = cm setting_id = auto_build_list field_id = min_discount }

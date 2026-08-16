@@ -120,6 +120,7 @@ cm_stage_upgrade_candidate = {
 				cm_is_not_under_construction = yes
 			}
 			scope:cm_location = { cm_location_building_type_not_under_construction = yes }
+			cm_auto_expand_check_minimum_gold_reserve = yes
 			NOT = { scope:cm_location = { is_target_in_variable_list = { name = cm_upgrade_in_progress target = scope:cm_ae_staged_type } } }
 		}
 		scope:cm_location = {
@@ -339,7 +340,7 @@ cm_run_auto_expand_buildings = {
 			save_scope_as = cm_location
 			ordered_buildings_in_location = {
 				order_by = building_index
-				max = 500
+				max = 100
 				check_range_bounds = no
 				save_scope_as = cm_building
 				building_type = { save_scope_as = cm_building_type }
@@ -382,7 +383,7 @@ cm_run_auto_expand_buildings = {
 		# Upgrades for standing obsolete buildings whose replacement is registered
 		ordered_buildings_in_location = {
 			order_by = building_index
-			max = 500
+			max = 100
 			check_range_bounds = no
 			save_scope_as = cm_building
 			building_type = { save_scope_as = cm_building_type }
@@ -506,7 +507,7 @@ cm_run_upgrade_all_buildings = {
 		save_scope_as = cm_location
 		ordered_buildings_in_location = {
 			order_by = building_index
-			max = 500
+			max = 100
 			check_range_bounds = no
 			save_scope_as = cm_building
 			building_type = { save_scope_as = cm_building_type }
@@ -516,6 +517,8 @@ cm_run_upgrade_all_buildings = {
 					cm_is_building_obsolete = yes
 					location = { cm_is_building_type_upgradeable_and_can_be_upgraded_by_owner = yes }
 					cm_is_not_under_construction = yes
+					cm_auto_expand_check_minimum_gold_reserve = yes
+					cm_upgrade_all_meets_minimum_discount = yes
 					NOT = { scope:cm_location = { is_target_in_variable_list = { name = cm_upgrade_in_progress target = scope:cm_building_type } } }
 				}
 				scope:cm_building_type = { cm_find_current_building_type = yes }

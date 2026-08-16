@@ -3,24 +3,6 @@
 		cm_unified_auto_expand
 		cm_update_all_list_visibility
 		cm_monthly_auto_town_rights
-		cm_monthly_grant_construction_capacity
-	}
-}
-
-# Grants every owned location a very large simultaneous-construction bonus each
-# month, so the automation is never bottlenecked by a location's normal 1-2
-# concurrent-construction cap. add_and_extend avoids re-stacking the modifier
-# on locations that already have it; new locations (conquest, purchase, etc.)
-# pick it up on the next monthly pulse.
-cm_monthly_grant_construction_capacity = {
-	effect = {
-		every_owned_location = {
-			add_location_modifier = {
-				modifier = cm_unlimited_construction_slots_modifier
-				mode = add_and_extend
-				years = -1
-			}
-		}
 	}
 }
 
